@@ -1,16 +1,23 @@
 # ChessGOAT — client
 
 Browser UI for ChessGOAT. Assign a move-producing **Engine** to each side and play.
-This is the foundational vertical slice (PLAN build steps 1–2): the board, legal-move
-enforcement, terminal-state detection, the Engine interface, and the Random + Greedy
-engines. Later steps add Classical alpha-beta, Roster Stockfish, and the Searchless
-backend.
+The roster spans Random, Greedy, a from-scratch Classical alpha-beta search, Roster
+Stockfish (WASM), and the **Searchless** engine — DeepMind's action-value net served
+by the local backend over `POST /move`. Human-vs-Bot and Bot-vs-Bot autoplay, mid-game
+brain swapping on both sides, pawn promotion, and undo all run client-side.
 
 ## Run
 
 ```bash
 npm install
 npm run dev      # Vite dev server on http://localhost:5173
+```
+
+The **Searchless** engine calls the backend at `http://localhost:8000` by default
+(see `../backend`). Point it elsewhere with a build-time env var:
+
+```bash
+VITE_SEARCHLESS_URL=http://localhost:9000 npm run dev
 ```
 
 ## Quality gates
@@ -30,10 +37,12 @@ npm run build    # type-check + production bundle
   mid-game is free.
   - `types.ts` — `Engine`, `Fen`, `UciString`.
   - `random.ts`, `greedy.ts` — the two baseline engines.
+  - `classical/`, `stockfish/` — the alpha-beta and WASM Stockfish engines.
+  - `searchless/` — the backend-backed engine; `getMove` is an HTTP `POST /move`.
   - `registry.ts` — the roster + the per-side selector options (Human + engines).
 - `src/game/` — `useChessGame` (chess.js-backed game state, click-to-move, engine
-  autoplay) and `terminal.ts` (checkmate / stalemate / threefold / insufficient /
-  fifty-move classification).
+  autoplay with a ply-cap backstop) and `terminal.ts` (checkmate / stalemate /
+  threefold / insufficient / fifty-move classification).
 - `src/components/` — `board/` (board + squares), `EngineSelector`, `StatusBar`,
   `PromotionPicker`.
 

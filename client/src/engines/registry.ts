@@ -3,17 +3,19 @@ import { randomEngine } from "./random.ts";
 import { greedyEngine } from "./greedy.ts";
 import { classicalEngine } from "./classical/classical.ts";
 import { stockfishEngine } from "./stockfish/stockfish.ts";
+import { searchlessEngine } from "./searchless/searchless.ts";
 
 /**
  * The client-side Engine roster, in selector order (weakest → strongest). The
- * Searchless net arrives later as a backend-backed Engine implementing the same
- * interface.
+ * Searchless net is a backend-backed Engine — `getMove` is an HTTP call to the
+ * local FastAPI server — implementing the same interface as the in-browser ones.
  */
 export const ENGINES: readonly Engine[] = [
   randomEngine,
   greedyEngine,
   classicalEngine,
   stockfishEngine,
+  searchlessEngine,
 ];
 
 const BY_ID: ReadonlyMap<string, Engine> = new Map(

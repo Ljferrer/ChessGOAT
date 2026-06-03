@@ -95,6 +95,12 @@
   text-transform: uppercase;
   color: var(--color-text-muted);
 }
+.status__notice {
+  font-size: var(--text-eyebrow);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
 .status__pulse {
   width: 8px;
   height: 8px;

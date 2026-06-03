@@ -22,7 +22,7 @@ export interface PendingPromotion {
 /** Delay before an Engine's move is applied, so play is watchable. */
 const MOVE_DELAY_MS = 350;
 /** Backstop so Engine-vs-Engine autoplay can never loop forever (PLAN ply cap). */
-const PLY_CAP = 400;
+export const PLY_CAP = 400;
 
 interface Snapshot {
   fen: string;
@@ -54,6 +54,11 @@ export interface ChessGame {
   canUndo: boolean;
   /** True when the side to move is human-controlled and may interact. */
   awaitingHuman: boolean;
+  /**
+   * True when autoplay has stopped because the {@link PLY_CAP} backstop was hit
+   * with an Engine still to move — the UI surfaces this as the stop reason.
+   */
+  plyCapReached: boolean;
   onSquareClick: (square: Square) => void;
   setController: (color: Color, id: ControllerId) => void;
   resolvePromotion: (piece: "q" | "r" | "b" | "n") => void;
@@ -109,6 +114,13 @@ export function useChessGame(): ChessGame {
 
   const awaitingHuman =
     !snap.status.isGameOver && controllers[snap.status.turn] === HUMAN;
+
+  // The ply-cap backstop only matters while an Engine is owed a move: that's the
+  // autoplay that got halted. A human to move can always continue clicking.
+  const plyCapReached =
+    !snap.status.isGameOver &&
+    snap.plies >= PLY_CAP &&
+    controllers[snap.status.turn] !== HUMAN;
 
   // --- Engine autoplay: ask the controlling Engine for the side to move. -------
   useEffect(() => {
@@ -235,6 +247,7 @@ export function useChessGame(): ChessGame {
     autoplayPaused,
     canUndo: snap.plies > 0,
     awaitingHuman,
+    plyCapReached,
     onSquareClick,
     setController,
     resolvePromotion,

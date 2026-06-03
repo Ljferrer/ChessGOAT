@@ -3,7 +3,7 @@ import { EngineSelector } from "./components/EngineSelector.tsx";
 import { StatusBar } from "./components/StatusBar.tsx";
 import { PromotionPicker } from "./components/PromotionPicker.tsx";
 import { StrengthControls } from "./components/StrengthControls.tsx";
-import { useChessGame } from "./game/useChessGame.ts";
+import { useChessGame, PLY_CAP } from "./game/useChessGame.ts";
 import { HUMAN } from "./engines/registry.ts";
 import "./App.css";
 
@@ -13,6 +13,9 @@ export function App() {
     !game.status.isGameOver && game.controllers[game.status.turn] !== HUMAN;
   const showResume = game.autoplayPaused && sideToMoveIsEngine;
   const activeEngineIds = new Set([game.controllers.w, game.controllers.b]);
+  const stopNotice = game.plyCapReached
+    ? `Autoplay stopped — ply cap (${PLY_CAP}) reached`
+    : null;
 
   return (
     <div className="app">
@@ -43,6 +46,7 @@ export function App() {
             isThinking={game.isThinking}
             showResume={showResume}
             onResume={game.resume}
+            notice={stopNotice}
           />
 
           <div className="panel__brains">

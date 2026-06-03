@@ -5,11 +5,20 @@ interface StatusBarProps {
   isThinking: boolean;
   showResume: boolean;
   onResume: () => void;
+  /** Why autoplay stopped short of a terminal Position (e.g. the ply cap). */
+  notice?: string | null;
 }
 
 /** The live status line: whose move / check / how the game ended, plus the
- *  thinking indicator and a resume affordance after an undo paused autoplay. */
-export function StatusBar({ status, isThinking, showResume, onResume }: StatusBarProps) {
+ *  thinking indicator, an optional autoplay stop-reason notice, and a resume
+ *  affordance after an undo paused autoplay. */
+export function StatusBar({
+  status,
+  isThinking,
+  showResume,
+  onResume,
+  notice,
+}: StatusBarProps) {
   const tone = status.isGameOver
     ? status.winner
       ? "win"
@@ -27,6 +36,7 @@ export function StatusBar({ status, isThinking, showResume, onResume }: StatusBa
           thinking…
         </span>
       )}
+      {notice && <span className="status__notice">{notice}</span>}
       {showResume && (
         <button type="button" className="btn btn--ghost btn--sm" onClick={onResume}>
           Resume
