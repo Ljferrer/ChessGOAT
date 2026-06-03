@@ -1,0 +1,12 @@
+# Web layer for the Searchless backend. The heavy JAX inference stack lives in
+# requirements-engine.txt so the API and tests can be installed without it.
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2.6
+pydantic-settings>=2.2
+chess>=1.10
+
+# Test/dev tooling.
+pytest>=8.0
+httpx>=0.27
+ruff>=0.4

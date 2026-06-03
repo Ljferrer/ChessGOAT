@@ -1,0 +1,15 @@
+# JAX/Haiku inference stack for DeepMind's action-value net (ADR-0002).
+# CPU only on macOS arm64 — `pip install jax jaxlib` resolves to the CPU build;
+# DO NOT install jax-metal (it regresses/blocks this model). Mirrors the inference
+# subset of google-deepmind/searchless_chess's requirements.txt.
+jax
+jaxlib
+dm-haiku
+optax
+orbax-checkpoint
+chex
+jaxtyping
+numpy
+scipy
+chess
+typing-extensions

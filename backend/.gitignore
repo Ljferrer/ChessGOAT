@@ -1,0 +1,13 @@
+# Vendored DeepMind source (cloned by scripts/setup.sh)
+vendor/
+
+# Downloaded Checkpoints (weights) and their archives
+checkpoints/*/
+*.zip
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
