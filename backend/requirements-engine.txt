@@ -1,18 +1,29 @@
-# JAX/Haiku inference stack for DeepMind's action-value net (ADR-0002).
-# CPU only on macOS arm64 — `pip install jax jaxlib` resolves to the CPU build;
-# DO NOT install jax-metal (it regresses/blocks this model). Mirrors the inference
-# subset of google-deepmind/searchless_chess's requirements.txt.
-jax
-jaxlib
-dm-haiku
-optax
-orbax-checkpoint
-chex
+# CPU-only inference stack for DeepMind's action-value net (ADR-0002).
+# On macOS arm64, jax/jaxlib resolve to CPU builds automatically — never install
+# jax-metal (it does not support this model and regresses CPU).
+#
+# The numerical stack is PINNED as a coherent set, on purpose: DeepMind's vendored
+# code uses `jax.sharding.PositionalSharding`, which JAX removed in >= 0.6 — yet the
+# current optax/chex/orbax releases require jax >= 0.6. Pinning jax 0.4.38 forces the
+# whole stack back to a mutually compatible snapshot. dm-haiku 0.0.13 imports flax at
+# load time, so flax is pinned alongside. This exact set is verified to load the 9M
+# Checkpoint and serve moves on macOS arm64 / Python 3.13.
+jax==0.4.38
+jaxlib==0.4.38
+dm-haiku==0.0.13
+flax==0.8.5
+optax==0.2.4
+orbax-checkpoint==0.6.4
+chex==0.1.88
+
+# Not coupled to the jax version above — left unpinned to track fixes.
 jaxtyping
 numpy
 scipy
 chess
 typing-extensions
-# Imported at module load by their training_utils.py (load_parameters lives there),
-# so it's required even though we only serve, never train.
+
+# Imported at module load by the vendored src (training_utils / constants), so they
+# are required even though we only ever serve, never train.
 grain-nightly
+apache-beam

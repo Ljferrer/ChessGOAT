@@ -50,13 +50,18 @@ def test_load_engine_builds_once_and_caches(monkeypatch) -> None:
     assert calls["n"] == 1  # built once, then cached
 
 
-def test_health_reports_loaded_flag(monkeypatch) -> None:
+def test_health_reports_not_loaded_when_build_fails(monkeypatch) -> None:
+    # Patch BEFORE the client starts so the startup load fails and stays unloaded,
+    # regardless of any ambient weights/config.
     monkeypatch.setattr(main, "_engine", None)
+
+    def boom():
+        raise EngineLoadError("no weights")
+
+    monkeypatch.setattr(main, "build_deepmind_engine", boom)
+
     with TestClient(main.app) as client:
-        # lazy_load defaults False, but build fails silently in lifespan here.
-        monkeypatch.setattr(
-            main, "build_deepmind_engine", lambda: (_ for _ in ()).throw(EngineLoadError("x"))
-        )
         body = client.get("/health").json()
+
     assert body["engine_loaded"] is False
     assert body["status"] == "ok"
