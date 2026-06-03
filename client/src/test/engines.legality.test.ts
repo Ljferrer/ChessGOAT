@@ -88,9 +88,11 @@ describe("engine legality battery — every client engine, every position", () =
       }
     });
 
-    it(`Classical returns a legal move at several depths: ${name}`, () => {
-      // Exhaustive (no time budget) → deterministic; check depths 1–3.
-      for (let depth = 1; depth <= 3; depth += 1) {
+    it(`Classical returns a legal move at search depths 1–2: ${name}`, () => {
+      // Exhaustive (no budget) → deterministic and fast even on the 48-move
+      // tactical Position. Legality is independent of depth; deeper tactical
+      // correctness lives in classical.search.test.ts.
+      for (let depth = 1; depth <= 2; depth += 1) {
         const uci = selectClassicalMove(fen, depth);
         expect(isLegal(fen, uci), `illegal move ${uci} at depth ${depth}`).toBe(
           true,

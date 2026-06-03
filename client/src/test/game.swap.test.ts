@@ -19,21 +19,21 @@ describe("mid-game engine swapping", () => {
     act(() => result.current.onSquareClick("e4"));
     await waitFor(() => expect(result.current.status.turn).toBe("w"));
 
-    const pliesBefore = new Chess(result.current.fen).history().length;
-    expect(result.current.fen).toBeTruthy();
-
     // Swap BOTH sides mid-game: White (was Human) → Greedy, Black → Greedy.
     act(() => result.current.setController("w", "greedy"));
     act(() => result.current.setController("b", "greedy"));
 
-    // Both Engines should now drive autoplay forward several plies, legally.
-    await waitFor(
-      () => {
-        const plies = new Chess(result.current.fen).history().length;
-        expect(plies).toBeGreaterThan(pliesBefore + 2);
-      },
-      { timeout: 4000 },
-    );
+    // Both Engines now drive autoplay forward; observe at least two successive
+    // plies (one per side) by watching the FEN advance, each a valid Position.
+    const fen0 = result.current.fen;
+    await waitFor(() => expect(result.current.fen).not.toBe(fen0), {
+      timeout: 4000,
+    });
+    const fen1 = result.current.fen;
+    expect(() => new Chess(fen1)).not.toThrow();
+    await waitFor(() => expect(result.current.fen).not.toBe(fen1), {
+      timeout: 4000,
+    });
 
     // The position is never corrupted: every snapshot parses as a valid game.
     expect(() => new Chess(result.current.fen)).not.toThrow();

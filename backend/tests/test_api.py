@@ -60,3 +60,15 @@ def test_cors_allows_vite_origin(client) -> None:
     )
 
     assert response.headers.get("access-control-allow-origin") == "http://localhost:5173"
+
+
+def test_cors_rejects_foreign_origin(client) -> None:
+    # Local-only (ADR-0001): a non-localhost Origin gets no allow-origin header,
+    # so a browser blocks the cross-site read.
+    response = client.post(
+        "/move",
+        json={"fen": START_FEN},
+        headers={"Origin": "https://evil.example.com"},
+    )
+
+    assert response.headers.get("access-control-allow-origin") is None

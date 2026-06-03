@@ -24,7 +24,8 @@ export function App() {
         <h1 className="masthead__title">Two brains, one board.</h1>
         <p className="masthead__lede">
           Assign a brain to each side and watch them play — from Random and Greedy to a
-          from-scratch Classical alpha-beta search and Stockfish running in your browser.
+          from-scratch Classical alpha-beta search, Stockfish in your browser, and
+          DeepMind's Searchless net served from the backend.
         </p>
       </header>
 

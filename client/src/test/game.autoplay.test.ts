@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { Square } from "chess.js";
-import { useChessGame, PLY_CAP } from "../game/useChessGame.ts";
+import { useChessGame, type ChessGame, PLY_CAP } from "../game/useChessGame.ts";
 
 /**
  * Acceptance criterion (2): games reach REAL end states and the autoplay loop
@@ -13,14 +13,18 @@ import { useChessGame, PLY_CAP } from "../game/useChessGame.ts";
  * reason (stalemate/threefold/insufficient/fifty-move) is classified correctly.
  */
 
-/** Play a from→to move through the click-to-move interface. */
+/**
+ * Play a from→to move through the click-to-move interface. Re-reads
+ * `onSquareClick` for each click: selecting a piece changes `selected`, so the hook
+ * hands back a fresh callback — a captured reference would be stale by the 2nd click.
+ */
 function clickMove(
-  onSquareClick: (s: Square) => void,
+  result: { current: ChessGame },
   from: Square,
   to: Square,
 ): void {
-  act(() => onSquareClick(from));
-  act(() => onSquareClick(to));
+  act(() => result.current.onSquareClick(from));
+  act(() => result.current.onSquareClick(to));
 }
 
 describe("autoplay stop conditions", () => {
@@ -30,10 +34,10 @@ describe("autoplay stop conditions", () => {
     act(() => result.current.setController("b", "human"));
 
     // Fool's mate: 1. f3 e5 2. g4 Qh4#
-    clickMove(result.current.onSquareClick, "f2", "f3");
-    clickMove(result.current.onSquareClick, "e7", "e5");
-    clickMove(result.current.onSquareClick, "g2", "g4");
-    clickMove(result.current.onSquareClick, "d8", "h4");
+    clickMove(result, "f2", "f3");
+    clickMove(result, "e7", "e5");
+    clickMove(result, "g2", "g4");
+    clickMove(result, "d8", "h4");
 
     expect(result.current.status.isGameOver).toBe(true);
     expect(result.current.status.outcome).toBe("checkmate");
@@ -45,10 +49,10 @@ describe("autoplay stop conditions", () => {
     const { result } = renderHook(() => useChessGame());
     act(() => result.current.setController("b", "human"));
 
-    clickMove(result.current.onSquareClick, "f2", "f3");
-    clickMove(result.current.onSquareClick, "e7", "e5");
-    clickMove(result.current.onSquareClick, "g2", "g4");
-    clickMove(result.current.onSquareClick, "d8", "h4");
+    clickMove(result, "f2", "f3");
+    clickMove(result, "e7", "e5");
+    clickMove(result, "g2", "g4");
+    clickMove(result, "d8", "h4");
 
     const matedFen = result.current.fen;
     expect(result.current.status.outcome).toBe("checkmate");
@@ -75,7 +79,7 @@ describe("autoplay stop conditions", () => {
   it("does not flag the ply cap at the start of a game", async () => {
     const { result } = renderHook(() => useChessGame());
     // White human, Black Random: a fresh game is nowhere near the cap.
-    clickMove(result.current.onSquareClick, "e2", "e4");
+    clickMove(result, "e2", "e4");
     await waitFor(() => expect(result.current.status.turn).toBe("w"));
     expect(result.current.plyCapReached).toBe(false);
   });
