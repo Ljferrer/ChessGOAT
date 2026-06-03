@@ -51,10 +51,15 @@ def get_engine() -> SearchlessEngine:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Eagerly load the engine at startup unless configured to defer it."""
+    """Eagerly load the engine at startup unless configured to defer it.
+
+    The load runs in a worker thread, not on the event loop: importing the JAX
+    stack triggers ``nest_asyncio`` patching that fails against uvicorn's uvloop,
+    and the heavy build shouldn't block the loop anyway.
+    """
     if not settings.lazy_load:
         try:
-            _load_engine()
+            await anyio.to_thread.run_sync(_load_engine)
         except EngineLoadError as exc:
             # Don't crash the server: /health reports not-ready and /move 503s,
             # which is friendlier than a boot loop while weights are downloading.

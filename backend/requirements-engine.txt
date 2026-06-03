@@ -13,3 +13,6 @@ numpy
 scipy
 chess
 typing-extensions
+# Imported at module load by their training_utils.py (load_parameters lives there),
+# so it's required even though we only serve, never train.
+grain-nightly
