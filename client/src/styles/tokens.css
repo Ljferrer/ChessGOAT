@@ -1,0 +1,59 @@
+:root {
+  /* Surfaces — warm near-black, layered ink */
+  --color-bg: oklch(20% 0.012 75);
+  --color-surface: oklch(25% 0.014 75);
+  --color-surface-raised: oklch(29% 0.016 75);
+  --color-border: oklch(38% 0.02 75);
+  --color-border-strong: oklch(48% 0.03 75);
+
+  /* Board — aged ivory & walnut */
+  --square-light: oklch(82% 0.045 80);
+  --square-dark: oklch(46% 0.055 55);
+  --square-light-active: oklch(86% 0.11 95);
+  --square-dark-active: oklch(56% 0.12 90);
+  --board-frame: oklch(16% 0.012 70);
+
+  /* Pieces */
+  --piece-white: oklch(97% 0.01 90);
+  --piece-white-edge: oklch(28% 0.02 60);
+  --piece-black: oklch(22% 0.015 60);
+  --piece-black-edge: oklch(78% 0.02 90);
+
+  /* Text */
+  --color-text: oklch(93% 0.012 85);
+  --color-text-muted: oklch(70% 0.018 80);
+  --color-text-faint: oklch(56% 0.02 80);
+
+  /* Accent — burnished gold + signals */
+  --color-accent: oklch(78% 0.14 85);
+  --color-accent-dim: oklch(64% 0.1 85);
+  --color-check: oklch(60% 0.2 25);
+  --color-win: oklch(78% 0.16 145);
+
+  /* Type */
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-ui: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
+
+  --text-eyebrow: 0.72rem;
+  --text-body: 0.95rem;
+  --text-title: clamp(1.8rem, 1.2rem + 2vw, 2.9rem);
+
+  /* Rhythm */
+  --space-1: 0.35rem;
+  --space-2: 0.6rem;
+  --space-3: 1rem;
+  --space-4: 1.6rem;
+  --space-5: 2.6rem;
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+
+  --shadow-panel: 0 18px 50px -24px oklch(0% 0 0 / 0.7);
+  --shadow-board: 0 30px 70px -30px oklch(0% 0 0 / 0.8);
+
+  --duration-fast: 130ms;
+  --duration-normal: 240ms;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
