@@ -1,13 +1,20 @@
 import type { Engine } from "./types.ts";
 import { randomEngine } from "./random.ts";
 import { greedyEngine } from "./greedy.ts";
+import { classicalEngine } from "./classical/classical.ts";
+import { stockfishEngine } from "./stockfish/stockfish.ts";
 
 /**
- * The client-side Engine roster, in selector order. Later build steps add
- * Classical alpha-beta and Roster Stockfish here; the Searchless net arrives as a
- * backend-backed Engine implementing the same interface.
+ * The client-side Engine roster, in selector order (weakest → strongest). The
+ * Searchless net arrives later as a backend-backed Engine implementing the same
+ * interface.
  */
-export const ENGINES: readonly Engine[] = [randomEngine, greedyEngine];
+export const ENGINES: readonly Engine[] = [
+  randomEngine,
+  greedyEngine,
+  classicalEngine,
+  stockfishEngine,
+];
 
 const BY_ID: ReadonlyMap<string, Engine> = new Map(
   ENGINES.map((engine) => [engine.id, engine]),

@@ -2,6 +2,7 @@ import { Board } from "./components/board/Board.tsx";
 import { EngineSelector } from "./components/EngineSelector.tsx";
 import { StatusBar } from "./components/StatusBar.tsx";
 import { PromotionPicker } from "./components/PromotionPicker.tsx";
+import { StrengthControls } from "./components/StrengthControls.tsx";
 import { useChessGame } from "./game/useChessGame.ts";
 import { HUMAN } from "./engines/registry.ts";
 import "./App.css";
@@ -11,6 +12,7 @@ export function App() {
   const sideToMoveIsEngine =
     !game.status.isGameOver && game.controllers[game.status.turn] !== HUMAN;
   const showResume = game.autoplayPaused && sideToMoveIsEngine;
+  const activeEngineIds = new Set([game.controllers.w, game.controllers.b]);
 
   return (
     <div className="app">
@@ -18,8 +20,8 @@ export function App() {
         <p className="masthead__eyebrow">ChessGOAT</p>
         <h1 className="masthead__title">Two brains, one board.</h1>
         <p className="masthead__lede">
-          Assign a brain to each side and watch them play. This slice ships the board,
-          legal-move enforcement, and the Random &amp; Greedy engines.
+          Assign a brain to each side and watch them play — from Random and Greedy to a
+          from-scratch Classical alpha-beta search and Stockfish running in your browser.
         </p>
       </header>
 
@@ -57,6 +59,8 @@ export function App() {
               onChange={game.setController}
             />
           </div>
+
+          <StrengthControls activeEngineIds={activeEngineIds} />
 
           <div className="panel__controls">
             <button type="button" className="btn btn--primary" onClick={game.reset}>
