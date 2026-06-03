@@ -18,10 +18,10 @@ The UI-facing label for the Engine currently assigned to a side ("White brain",
 _Avoid_: using "Brain" in code or design discussion — say Engine.
 
 **Searchless engine**:
-An Engine that returns a move from a single neural-network forward pass, with no tree
-search. Modeled on DeepMind's "Grandmaster-Level Chess Without Search." In this project
-it is a small transformer trained locally; the same serving path can also load a
-stronger pretrained checkpoint.
+An Engine that picks a move from neural-network forward passes with no tree search —
+DeepMind's "Grandmaster-Level Chess Without Search." In this project it is DeepMind's
+released **action-value** transformer (default 270M), served via their JAX/Haiku code on
+CPU: one batched forward pass scores all legal moves, the best wins.
 _Avoid_: "no-search NN", "transformer engine"
 
 **Classical alpha-beta**:
@@ -30,9 +30,9 @@ handcrafted evaluation. Represents the Deep Blue family.
 _Avoid_: "minimax engine", "Deep Blue"
 
 **Checkpoint**:
-A saved set of trained Searchless-engine weights that the backend loads and serves. The
-locally-trained toy checkpoint is the default; a stronger downloaded checkpoint can be
-swapped in through the same interface.
+A saved set of Searchless-engine weights that the backend loads and serves. The default is
+DeepMind's downloaded 270M action-value checkpoint; the optional training lab can also
+produce one the same server loads.
 
 **Position**:
 The complete game state needed to choose a move, carried as a FEN string. Engines derive
@@ -45,8 +45,7 @@ The universal value every Engine's `getMove` returns: a UCI long-algebraic strin
 ("e2e4", "e7e8q"). The single contract shared by all client Engines and the backend.
 _Avoid_: SAN, move object — those are encodings/representations, not the contract.
 
-**Labeling Stockfish** vs **Roster Stockfish**:
-Two deployments of the same engine. The *Labeling Stockfish* is a native binary used
-offline (via python-chess UCI) to assign win-probability labels to training Positions.
-The *Roster Stockfish* is the `stockfish.js` WASM Engine in the browser that the user
-actually plays against. They never run in the same place.
+**Roster Stockfish**:
+The `stockfish.js` WASM Engine in the browser that the user plays against (single-threaded
+build, depth/skill slider). Distinct from the Searchless engine; it is the modern-SOTA
+entry in the roster.

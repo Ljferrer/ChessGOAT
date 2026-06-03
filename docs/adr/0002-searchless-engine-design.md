@@ -1,29 +1,38 @@
-# Searchless engine: locally-trained tiny SV transformer in PyTorch
+# Searchless engine: serve DeepMind's released checkpoint (JAX, CPU)
 
-The Searchless engine is a **from-scratch tiny transformer trained here**, not DeepMind's
-released weights. We train on Apple silicon with no GPU, so the realistic outcome is a
-**weak toy net** whose value is demonstrating the full pipeline (tokenize → train →
-serve → one-forward-pass move), not strength. The serving path is **dual-path**: it loads
-any PyTorch checkpoint, so a stronger net trained elsewhere can be swapped in later through
-the same interface.
+The Searchless engine **serves DeepMind's pretrained `searchless_chess` checkpoint** via
+their own JAX/Haiku inference code, running on CPU locally. We do **not** train the played
+engine ourselves. The Mac/no-GPU constraint only ever blocked *training*, not *inference* —
+CPU JAX runs the model fine for turn-based play — so paying the full cost of a from-scratch
+toy net bought the weakest possible result for the most work. Downloading their real model
+is one `checkpoints/download.sh` away and gives a strong, faithful engine with near-zero
+reimplementation risk.
 
 ## Decisions
 
-- **Prediction target: State-value (SV).** At play time the engine expands each legal move
-  and scores the resulting Position, picking the best (~30 forward passes/move). Still
-  "searchless" in the paper's sense — no lookahead tree, no value backups.
-- **Framework: PyTorch (MPS).** Chosen over DeepMind's JAX/Haiku for Apple-silicon
-  ergonomics. Consequence: DeepMind's JAX checkpoints will **not** load directly, so
-  "stronger checkpoint later" means a larger PyTorch net, not their exact weights.
-- **Input: char-FEN tokens** (DeepMind-style fixed-length tokenization) → small transformer
-  encoder → sigmoid win-probability head, BCE loss.
-- **Training data:** positions sampled from a Lichess PGN dump, labeled with a **native
-  Labeling Stockfish** (shallow depth) via python-chess UCI, centipawns → win-prob via a
-  logistic. Distinct from the browser Roster Stockfish.
+- **Model:** DeepMind's **action-value** transformer (their strongest variant), default
+  **270M** ("GOAT"-level, ~2895 Lichess blitz). Size is a config choice — drop to 9M/136M
+  for lower latency. Loaded and run with their `src/` engine in **JAX/Haiku on CPU**
+  (no `jax-metal`).
+- **Serving:** `POST /move {fen}` → their engine evaluates all legal moves in one batched
+  forward pass → returns the best **Move (UCI)**.
+- **Optional training lab (off the play path):** reuse DeepMind's *own* pipeline —
+  `data/download.sh` (a small ChessBench shard) + `train.py` on a tiny config, in JAX. On
+  Mac CPU it's a slow toy run, but it exercises the real pipeline and produces a checkpoint
+  the same server can load. One framework throughout.
 
-## Considered Options
+## Consequences
 
-- **AV / BC targets** — rejected for now: AV is strongest but needs per-move SF labels and
-  heavier data; BC is simplest but the user chose SV as the middle ground.
-- **Download DeepMind / ChessBench** — rejected: defeats "train it here" and ties us to
-  their JAX weights and bag format.
+- **PyTorch is dropped.** Serving and the optional lab are both JAX. (User accepted this in
+  exchange for using DeepMind's real model.)
+- With 270M on CPU, **Bot-vs-Bot autoplay is slow** (several seconds/ply); the ply cap and
+  speed control mitigate, and the size config can drop to 9M for autoplay sessions.
+- Build-time check: confirm `jaxlib` (CPU) installs on macOS arm64.
+
+## Considered & rejected
+
+- **Train a from-scratch tiny SV transformer in PyTorch** (the prior version of this ADR):
+  rejected — maximum code + reimplementation risk (own tokenizer, SV head, Stockfish
+  labeling, training loop) for the *weakest* engine. Demoted to the optional JAX lab above.
+- **State-value target** — superseded by action-value, which is DeepMind's strongest and is
+  fully implemented in their repo.

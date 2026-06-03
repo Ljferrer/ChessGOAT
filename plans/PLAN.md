@@ -12,8 +12,8 @@ Client–server, **local-only** (ADR-0001):
 - **Browser UI** — click-to-move board (chess.js for rules/legality/FEN), per-side Brain
   selectors, Human-vs-Bot and Bot-vs-Bot modes. Runs the light engines client-side.
 - **Python backend** (FastAPI + uvicorn on localhost) — serves the Searchless engine over
-  `POST /move {fen}`; expands legal children with python-chess, scores each child Position
-  with the SV net, returns the best **Move (UCI)**.
+  `POST /move {fen}`; DeepMind's action-value net scores all legal moves in one batched
+  forward pass (JAX/CPU), returns the best **Move (UCI)**.
 - **Engine interface:** `getMove(fen) -> Promise<UciString>`. Identical for every engine;
   for the Searchless engine it's an HTTP call. Engines hold no game history → mid-game
   swapping is free.
@@ -28,31 +28,33 @@ Run: `uvicorn` (:8000) + Vite (:5173); CORS allows localhost only.
 | Greedy | Baseline | Client | Highest-value capture, else random. |
 | Classical alpha-beta | Deep Blue | Client | Depth-limited minimax + alpha-beta, handcrafted PSQT eval. From scratch. |
 | Roster Stockfish (NNUE) | Modern SOTA | Client | `stockfish.js` (WASM) + strength/depth control. |
-| Searchless net (SV) | "No search" NN | Backend | Tiny transformer, 1-ply value-greedy. Trained here. |
+| Searchless net (AV) | "No search" NN | Backend | DeepMind's released action-value transformer (default 270M), served in JAX/CPU. |
 
-## Searchless engine + training pipeline (ADR-0002)
+## Searchless engine (ADR-0002)
 
-- **Target:** State-value. Play time expands each legal move, scores the child Position,
-  picks the best (~30 forward passes/move).
-- **Model:** char-FEN tokens → small transformer encoder → sigmoid win-prob head (PyTorch,
-  MPS). Shared `model.py` for train + serve. Checkpoint = `.pt` (dual-path: toy by
-  default, stronger checkpoint swappable later).
-- **Data:** Lichess PGN positions, labeled by a native **Labeling Stockfish** (shallow
-  depth, python-chess UCI), centipawns → win-prob via logistic.
-- **Reality:** Mac/no-GPU → a weak toy net. The point is the end-to-end pipeline, not
-  strength.
+- **Model:** DeepMind's released **action-value** checkpoint, default **270M** (~2895
+  Lichess blitz). Run with their `src/` engine in **JAX/Haiku on CPU** (no `jax-metal`).
+  Size is a config flag (drop to 9M/136M for latency / autoplay).
+- **Serving:** `POST /move {fen}` → their engine scores all legal moves in one batched
+  forward pass → best **Move (UCI)**. No training on the play path.
+- **Optional training lab (off the play path):** reuse DeepMind's own `data/download.sh`
+  (small ChessBench shard) + `train.py` on a tiny JAX config; produces a checkpoint the
+  same server loads. Slow toy run on Mac CPU; for learning, not strength.
+- **Setup:** `checkpoints/download.sh` for weights; verify `jaxlib` (CPU) installs on
+  macOS arm64.
 
 ## Build order
 
 1. Browser board + chess.js, click-to-move with legal-move enforcement.
 2. Engine interface (UCI contract) + Random and Greedy (client).
 3. Classical alpha-beta + Roster Stockfish (WASM) (client).
-4. Training pipeline: PGN sampling → Stockfish labeling → train tiny SV transformer → `.pt`.
-5. Backend: FastAPI `/move`, load checkpoint, child-expansion + SV scoring → UCI.
-6. Wire the Searchless engine into the client via HTTP; mode logic (Human-vs-Bot,
+4. Backend: download DeepMind checkpoint, FastAPI `/move`, load it in JAX, score legal
+   moves → best UCI.
+5. Wire the Searchless engine into the client via HTTP; mode logic (Human-vs-Bot,
    Bot-vs-Bot autoplay) + mid-game swapping on both sides.
-7. Verify: every engine returns only legal moves, games reach real end states, swapping
+6. Verify: every engine returns only legal moves, games reach real end states, swapping
    brains mid-game works on both sides, backend round-trips correctly.
+7. (Optional, later) Training lab via DeepMind's JAX pipeline on a small data shard.
 
 ## UI / UX behaviors (decided)
 
